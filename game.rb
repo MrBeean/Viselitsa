@@ -74,8 +74,6 @@ class Game
     next_step(letter)
   end
 
-# ----------------------------------------------------------------------
-  #Переопределяем метод upcase с помощью библиотеки unicode_utils/upcase
   def down_case_ru(ru_string)
     UnicodeUtils.downcase(ru_string)
   end
