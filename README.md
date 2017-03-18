@@ -1,5 +1,4 @@
-
-  ![виселица](https://games.mail.ru/pic/pc/game/picture/9d/9c068.jpeg)
+![виселица](https://games.mail.ru/pic/pc/game/picture/9d/9c068.jpeg)
 
 ## Основные функции программы
 
@@ -10,6 +9,7 @@
   + Основной файл программы viselitsa.rb
   + Необходимо подключить доп. gem `require "unicode_utils/downcase"`
   + Разработанно на Ruby версии - 2.3.0
+  + Запуск программы - `ruby viselitsa.rb`
   
 ## Разработчик
 
