@@ -1,15 +1,22 @@
 require "unicode_utils/downcase"
 
 class Game
+  attr_reader :errors, :letters, :good_letters, :bad_letters, :status
+
+  attr_accessor :version
+
+  MAX_ERRORS = 7
+  LETTER_REGEXP = /й|ё|е|и/
+
   def initialize(slovo)
     @letters = get_letters(slovo)
-
     @errors = 0
-
     @good_letters = []
     @bad_letters = []
-
-    @status = 0
+    @status = :in_progress
+    # :in_progress — игра продолжается
+    # :won — игра выиграна
+    # :lost — игра проиграна
   end
 
   def get_letters(slovo)
@@ -19,78 +26,85 @@ class Game
       slovo = slovo.encode("UTF-8")
     end
 
-    return down_case_ru(slovo).split("")
+    down_case_ru(slovo).split('')
   end
 
-  def status
-    return @status
+  def max_errors
+    MAX_ERRORS
   end
 
-  def next_step(bukva)
-    downcase_bukva = down_case_ru(bukva)
+  def errors_left
+    MAX_ERRORS - @errors
+  end
 
-    return if @status == -1 || @status == 1
+  def repeated?(letter)
+    @good_letters.include?(letter) || @bad_letters.include?(letter)
+  end
 
-    if @good_letters.include?(downcase_bukva) || @bad_letters.include?(downcase_bukva)
-      return
+  def is_good?(letter)
+    @letters.include?(letter) ||
+      (letter.match(LETTER_REGEXP) && @letters.grep(LETTER_REGEXP))
+  end
+
+  def solved?
+    (@letters - @good_letters).empty?
+  end
+
+  def lost?
+    @status == :lost || @errors >= MAX_ERRORS
+  end
+
+  def in_progress?
+    @status == :in_progress
+  end
+
+  def won?
+    @status == :won
+  end
+
+  def add_letter_to(letters, letter)
+    letters << letter
+
+    case letter
+    when "е" then letters << "ё"
+    when "ё" then letters << "е"
+    when "й" then letters << "и"
+    when "и" then letters << "й"
     end
+  end
 
-    letter_regexp = /й|ё|е|и/
+  def next_step(letter)
+    downcase_letter = down_case_ru(letter)
 
-    if @letters.include?(downcase_bukva) ||
-       (downcase_bukva.match(letter_regexp) && @letters.grep(letter_regexp))
+    return if @status == :lost || @status == :won
 
-      @good_letters << downcase_bukva
+    return if repeated?(downcase_letter)
 
-      case downcase_bukva
-      when "е"
-        @good_letters << "ё"
-      when "ё"
-        @good_letters << "е"
-      when "й"
-        @good_letters << "и"
-      when "и"
-        @good_letters << "й"
-      end
 
-      @status = 1 if (@letters - @good_letters).empty?
+    if is_good?(downcase_letter)
+      add_letter_to(@good_letters, downcase_letter)
+
+      @status = :won if solved?
     else
-      @bad_letters << downcase_bukva
+      add_letter_to(@bad_letters, downcase_letter)
 
       @errors += 1
 
-      @status = -1 if @errors >= 7
+      @status = :lost if lost?
     end
   end
 
   def ask_next_letter
     puts "\nВведите следующую букву"
 
-    letter = ""
-    while letter == "" || letter.size > 1 do
-      letter = STDIN.gets.encode("UTF-8").chomp
-    end
+    letter = ''
+
+    letter = STDIN.gets.encode('UTF-8').chomp while letter == ''
 
     next_step(letter)
   end
 
   def down_case_ru(ru_string)
     UnicodeUtils.downcase(ru_string)
-  end
-
-  def errors
-    @errors
-  end
-
-  def letters
-    @letters
-  end
-
-  def good_letters
-    @good_letters
-  end
-
-  def bad_letters
-    @bad_letters
   end
 end
